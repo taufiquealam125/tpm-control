@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0B0F1B"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Taufique Control</title>
+<style>
+  :root{ --bg:#0B0F1B; --card:#121830; --ink:#E8ECF8; --mut:#8FA3C8; --line:#1B2342;
+         --on:#00E58A; --off:#FF6B81; --blue:#2563EB; --accent:#7C3AED; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+        font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+        padding:16px; padding-bottom:40px; max-width:620px; margin:0 auto; }
+  h1{ font-size:20px; margin:4px 0 2px; }
+  .sub{ color:var(--mut); font-size:12px; margin-bottom:14px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin:0 0 14px; }
+  label{ display:block; font-size:12px; color:var(--mut); margin:8px 0 3px; }
+  input{ width:100%; background:#080B13; border:1px solid #2E4A7A; border-radius:9px;
+         color:#fff; padding:11px; font-size:15px; font-family:inherit; }
+  button{ font-family:inherit; font-weight:700; border:0; border-radius:10px; color:#fff;
+          padding:12px 14px; font-size:14px; }
+  .row{ display:flex; gap:8px; }
+  .row>*{ flex:1; }
+  .muted{ background:#3A4160; }
+  .blue{ background:var(--blue); }
+  .green{ background:#16A34A; }
+  .red{ background:#B91C1C; }
+  .accent{ background:var(--accent); }
+  .stick{ display:flex; align-items:center; gap:10px; background:#0B0F1B; border:1px solid var(--line);
+          border-radius:11px; padding:10px 12px; margin:8px 0; }
+  .stick .id{ font-family:ui-monospace,Consolas,monospace; font-weight:700; font-size:15px; }
+  .stick .note{ color:var(--mut); font-size:12px; margin-top:2px; }
+  .stick .grow{ flex:1; min-width:0; }
+  .pill{ font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; }
+  .pill.on{ background:rgba(0,229,138,.15); color:var(--on); }
+  .pill.off{ background:rgba(255,107,129,.15); color:var(--off); }
+  .toggle{ width:58px; height:32px; border-radius:20px; position:relative; border:0; flex:0 0 58px; }
+  .toggle.on{ background:var(--on); } .toggle.off{ background:#3A4160; }
+  .knob{ position:absolute; top:3px; width:26px; height:26px; border-radius:50%; background:#fff; transition:left .15s; }
+  .toggle.on .knob{ left:29px; } .toggle.off .knob{ left:3px; }
+  .x{ background:transparent; color:var(--off); font-size:20px; padding:4px 8px; flex:0 0 auto; }
+  .big{ font-size:16px; padding:16px; }
+  .status{ font-size:13px; color:var(--mut); margin:8px 2px; min-height:18px; }
+  .hide{ display:none; }
+  .tiny{ font-size:11px; color:var(--mut); line-height:1.5; }
+  a{ color:#5AA9FF; }
+  .head{ display:flex; justify-content:space-between; align-items:center; }
+  .gear{ background:transparent; color:var(--mut); font-size:20px; padding:4px 8px; }
+</style>
+</head>
+<body>
+
+  <div class="head">
+    <div>
+      <h1>Taufique Control</h1>
+      <div class="sub">Tool ko remote band / chalu karo</div>
+    </div>
+    <button class="gear" id="btnGear" title="Settings">&#9881;</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card" id="setup">
+    <div style="font-weight:700;margin-bottom:4px">GitHub setup (ek baar)</div>
+    <div class="tiny" style="margin-bottom:6px">Ye sab phone pe hi save rahega (localStorage). Kisi aur ko nahi jata.</div>
+    <label>GitHub username (owner)</label>
+    <input id="owner" placeholder="jaise: taufique123" autocapitalize="off" autocorrect="off"/>
+    <label>Repository name</label>
+    <input id="repo" placeholder="jaise: tpm-control" autocapitalize="off" autocorrect="off"/>
+    <label>Branch</label>
+    <input id="branch" value="main" autocapitalize="off" autocorrect="off"/>
+    <label>File path</label>
+    <input id="path" value="control.json" autocapitalize="off" autocorrect="off"/>
+    <label>Personal Access Token (PAT)</label>
+    <input id="pat" type="password" placeholder="ghp_... (Contents: Read & write)" autocapitalize="off" autocorrect="off"/>
+    <div class="row" style="margin-top:12px">
+      <button class="green" id="btnSave">SAVE &amp; CONNECT</button>
+      <button class="muted" id="btnClose">CLOSE</button>
+    </div>
+    <div class="tiny" style="margin-top:10px">
+      Token kaise: GitHub &rarr; Settings &rarr; Developer settings &rarr; Fine-grained tokens &rarr;
+      sirf is repo pe <b>Contents: Read and write</b>. Ya classic token with <b>repo</b> scope.
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main" class="hide">
+    <div class="card">
+      <div class="head">
+        <div style="font-weight:700">Master switch</div>
+        <button class="blue" id="btnRefresh" style="flex:0 0 auto;padding:8px 14px">&#8635; Refresh</button>
+      </div>
+      <div class="tiny" id="allState" style="margin:6px 0 10px">—</div>
+      <div class="row">
+        <button class="red big" id="btnKillAll">KILL ALL</button>
+        <button class="green big" id="btnRestoreAll">RESTORE ALL</button>
+      </div>
+      <div class="tiny" style="margin-top:8px">KILL ALL = sabhi copies band (tumhari owner.key wali chhod ke). RESTORE ALL = sab wapas chalu.</div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:2px">Sticks</div>
+      <div class="tiny" style="margin-bottom:6px">Switch ON = allow &nbsp;|&nbsp; OFF = delete (band) &nbsp;|&nbsp; &#128273; = password set &nbsp;|&nbsp; &times; = list se hatao</div>
+      <div id="list"></div>
+      <div class="status" id="status"></div>
+      <label>Nayi stick add karo (StickID.txt se ID)</label>
+      <input id="newId" placeholder="Stick ID (jaise 7A3C-19F2)" autocapitalize="characters" autocorrect="off"/>
+      <label>Note (kiski stick, optional)</label>
+      <input id="newNote" placeholder="jaise: Rahul ki stick"/>
+      <button class="accent" id="btnAdd" style="width:100%;margin-top:10px">+ ADD STICK (ON)</button>
+    </div>
+  </div>
+
+<script>
+const SKEY='tpm_ctrl_cfg';
+let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:''};
+let data={all:'ON',sticks:{},notes:{},pw:{}};
+let sha=null;
+
+async function sha256hex(str){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function $(id){ return document.getElementById(id); }
+function load(){ try{ const s=localStorage.getItem(SKEY); if(s){ cfg=Object.assign(cfg,JSON.parse(s)); } }catch(e){} }
+function save(){ try{ localStorage.setItem(SKEY,JSON.stringify(cfg)); }catch(e){} }
+function api(){ return `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`; }
+function b64enc(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64dec(str){ return decodeURIComponent(escape(atob(str.replace(/\n/g,'')))); }
+function setStatus(m,err){ const el=$('status'); el.textContent=m||''; el.style.color=err?'#FF6B81':'#8FA3C8'; }
+
+function showSetup(sh){ $('setup').classList.toggle('hide',!sh); $('main').classList.toggle('hide',sh); }
+
+async function ghGet(){
+  const r=await fetch(api()+'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now(),
+    {headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json'}});
+  if(r.status===404){ sha=null; return {all:'ON',sticks:{},notes:{},pw:{}}; }
+  if(!r.ok){ throw new Error('GitHub read failed ('+r.status+'). Token/username/repo check karo.'); }
+  const j=await r.json(); sha=j.sha;
+  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',sticks:o.sticks||{},notes:o.notes||{},pw:o.pw||{}}; }
+  catch(e){ return {all:'ON',sticks:{},notes:{},pw:{}}; }
+}
+async function ghPut(msg){
+  const body={ message:msg||'update control', content:b64enc(JSON.stringify(data,null,2)), branch:cfg.branch };
+  if(sha) body.sha=sha;
+  const r=await fetch(api(),{method:'PUT',
+    headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  if(!r.ok){ const t=await r.text(); throw new Error('GitHub save failed ('+r.status+'). '+t.slice(0,120)); }
+  const j=await r.json(); sha=j.content.sha;
+}
+
+function render(){
+  $('allState').innerHTML = data.all==='OFF'
+    ? '<span class="pill off">ALL OFF — sab band</span>'
+    : '<span class="pill on">ALL ON — normal</span>';
+  const ids=Object.keys(data.sticks);
+  const list=$('list'); list.innerHTML='';
+  if(ids.length===0){ list.innerHTML='<div class="tiny">Abhi koi stick nahi. Neeche se add karo.</div>'; }
+  ids.sort().forEach(id=>{
+    const st=(data.sticks[id]||'ON').toUpperCase();
+    const note=data.notes[id]||'';
+    const hasPw=!!(data.pw&&data.pw[id]);
+    const row=document.createElement('div'); row.className='stick';
+    row.innerHTML=`<div class="grow"><div class="id">${id} ${hasPw?'<span title="password set">&#128274;</span>':''}</div>${note?`<div class="note">${note}</div>`:''}</div>
+      <span class="pill ${st==='OFF'?'off':'on'}">${st==='OFF'?'DELETE':'ON'}</span>
+      <button class="toggle ${st==='OFF'?'off':'on'}" data-id="${id}"><span class="knob"></span></button>
+      <button class="lock" data-lock="${id}" style="background:transparent;color:${hasPw?'#FFD27A':'#8FA3C8'};font-size:18px;flex:0 0 auto">&#128273;</button>
+      <button class="x" data-del="${id}">&times;</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>toggle(b.dataset.id));
+  list.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>setPw(b.dataset.lock));
+  list.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delStick(b.dataset.del));
+}
+
+async function refresh(){
+  setStatus('Loading…');
+  try{ data=await ghGet(); render(); setStatus('Updated '+new Date().toLocaleTimeString()); }
+  catch(e){ setStatus(e.message,true); }
+}
+async function commit(msg){
+  setStatus('Saving…');
+  try{ await ghPut(msg); render(); setStatus('Saved '+new Date().toLocaleTimeString()); }
+  catch(e){ setStatus(e.message,true); await refresh(); }
+}
+async function toggle(id){
+  data.sticks[id]=(String(data.sticks[id]).toUpperCase()==='OFF')?'ON':'OFF';
+  render(); await commit('toggle '+id);
+}
+async function setPw(id){
+  const has=!!(data.pw&&data.pw[id]);
+  const p=prompt(has
+    ? 'Is device ka password badlo.\n(Khali chhod ke OK = password HATA do)\nStick: '+id
+    : 'Is device pe password set karo (worker ko tool kholne ke liye daalna padega):\nStick: '+id, '');
+  if(p===null) return;               // cancel
+  if(!data.pw) data.pw={};
+  const v=p.trim();
+  if(v===''){ delete data.pw[id]; render(); await commit('clear pw '+id); return; }
+  data.pw[id]=await sha256hex(v);    // only the HASH is stored (public file never shows the real password)
+  render(); await commit('set pw '+id);
+}
+async function delStick(id){
+  if(!confirm('Remove '+id+' from the list?')) return;
+  delete data.sticks[id]; delete data.notes[id]; if(data.pw) delete data.pw[id];
+  render(); await commit('remove '+id);
+}
+async function addStick(){
+  const id=($('newId').value||'').trim().toUpperCase();
+  if(!id){ setStatus('Stick ID daalo',true); return; }
+  data.sticks[id]='ON';
+  const n=($('newNote').value||'').trim(); if(n) data.notes[id]=n;
+  $('newId').value=''; $('newNote').value='';
+  render(); await commit('add '+id);
+}
+async function setAll(v){
+  const msg = v==='OFF' ? 'Sabhi copies BAND kar di jayein? (owner.key wali chalegi)' : 'Sabhi copies wapas CHALU?';
+  if(!confirm(msg)) return;
+  data.all=v; render(); await commit('ALL '+v);
+}
+
+$('btnSave').onclick=async()=>{
+  cfg.owner=$('owner').value.trim(); cfg.repo=$('repo').value.trim();
+  cfg.branch=($('branch').value.trim()||'main'); cfg.path=($('path').value.trim()||'control.json');
+  cfg.pat=$('pat').value.trim();
+  if(!cfg.owner||!cfg.repo||!cfg.pat){ alert('Username, repo aur token teeno chahiye.'); return; }
+  save();
+  try{ data=await ghGet(); if(sha===null){ await ghPut('init control'); } showSetup(false); render(); setStatus('Connected.'); }
+  catch(e){ alert(e.message); }
+};
+$('btnClose').onclick=()=>{ if(cfg.owner&&cfg.repo&&cfg.pat){ showSetup(false); } };
+$('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; showSetup(true); };
+$('btnRefresh').onclick=refresh;
+$('btnKillAll').onclick=()=>setAll('OFF');
+$('btnRestoreAll').onclick=()=>setAll('ON');
+$('btnAdd').onclick=addStick;
+
+load();
+if(cfg.owner&&cfg.repo&&cfg.pat){ showSetup(false); refresh(); } else { showSetup(true); }
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }
+</script>
+</body>
+</html>
