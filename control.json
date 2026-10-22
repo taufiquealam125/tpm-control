@@ -1,6 +1,10 @@
 {
   "all": "ON",
-  "sticks": {},
-  "notes": {},
+  "sticks": {
+    "50B13683": "ON"
+  },
+  "notes": {
+    "50B13683": "Rahul"
+  },
   "pw": {}
 }
