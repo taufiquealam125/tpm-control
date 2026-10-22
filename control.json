@@ -1,7 +1,11 @@
 {
   "all": "ON",
   "default": "OFF",
-  "sticks": {},
-  "notes": {},
+  "sticks": {
+    "AA66D2E2": "ON"
+  },
+  "notes": {
+    "AA66D2E2": "Vmware"
+  },
   "pw": {}
 }
