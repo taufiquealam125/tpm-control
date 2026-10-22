@@ -99,6 +99,16 @@
         <button class="green big" id="btnRestoreAll">RESTORE ALL</button>
       </div>
       <div class="tiny" style="margin-top:8px">KILL ALL = sabhi copies band (tumhari owner.key wali chhod ke). RESTORE ALL = sab wapas chalu.</div>
+      <div style="border-top:1px solid var(--line);margin:12px 0 0;padding-top:12px">
+        <div class="head">
+          <div>
+            <div style="font-weight:700">Whitelist mode</div>
+            <div class="tiny" id="wlState" style="margin-top:2px">—</div>
+          </div>
+          <button class="toggle off" id="wlToggle" style="flex:0 0 58px"><span class="knob"></span></button>
+        </div>
+        <div class="tiny" style="margin-top:8px">ON karo to <b>sirf wahi sticks chalengi jo tumne list mein ADD ki hain</b>. Koi bhi copy/anjaan stick (worker ne friend ko di) <b>khud DELETE</b> ho jayegi — tumhe uska ID jaanne ki zaroorat nahi. (Pehle apni sabhi asli sticks ADD kar lena!)</div>
+      </div>
     </div>
 
     <div class="card">
@@ -117,7 +127,7 @@
 <script>
 const SKEY='tpm_ctrl_cfg';
 let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:''};
-let data={all:'ON',sticks:{},notes:{},pw:{}};
+let data={all:'ON',default:'ON',sticks:{},notes:{},pw:{}};
 let sha=null;
 
 async function sha256hex(str){
@@ -138,11 +148,11 @@ function showSetup(sh){ $('setup').classList.toggle('hide',!sh); $('main').class
 async function ghGet(){
   const r=await fetch(api()+'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now(),
     {headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json'}});
-  if(r.status===404){ sha=null; return {all:'ON',sticks:{},notes:{},pw:{}}; }
+  if(r.status===404){ sha=null; return {all:'ON',default:'ON',sticks:{},notes:{},pw:{}}; }
   if(!r.ok){ throw new Error('GitHub read failed ('+r.status+'). Token/username/repo check karo.'); }
   const j=await r.json(); sha=j.sha;
-  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',sticks:o.sticks||{},notes:o.notes||{},pw:o.pw||{}}; }
-  catch(e){ return {all:'ON',sticks:{},notes:{},pw:{}}; }
+  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',default:o.default||'ON',sticks:o.sticks||{},notes:o.notes||{},pw:o.pw||{}}; }
+  catch(e){ return {all:'ON',default:'ON',sticks:{},notes:{},pw:{}}; }
 }
 async function ghPut(msg){
   const body={ message:msg||'update control', content:b64enc(JSON.stringify(data,null,2)), branch:cfg.branch };
@@ -158,6 +168,9 @@ function render(){
   $('allState').innerHTML = data.all==='OFF'
     ? '<span class="pill off">ALL OFF — sab band</span>'
     : '<span class="pill on">ALL ON — normal</span>';
+  const wl=(data.default||'ON').toUpperCase()!=='ON';
+  const wt=$('wlToggle'); if(wt){ wt.className='toggle '+(wl?'on':'off'); }
+  const ws=$('wlState'); if(ws){ ws.innerHTML = wl ? '<span class="pill on">ON — anjaan/copied stick auto-delete</span>' : '<span class="pill off">OFF — koi bhi stick chal jayegi</span>'; }
   const ids=Object.keys(data.sticks);
   const list=$('list'); list.innerHTML='';
   if(ids.length===0){ list.innerHTML='<div class="tiny">Abhi koi stick nahi. Neeche se add karo.</div>'; }
@@ -217,6 +230,13 @@ async function addStick(){
   $('newId').value=''; $('newNote').value='';
   render(); await commit('add '+id);
 }
+async function setDefault(){
+  const wl=(data.default||'ON').toUpperCase()!=='ON';    // currently whitelist?
+  const turnOn=!wl;                                      // we are about to turn whitelist ON
+  if(turnOn && !confirm('Whitelist ON karein?\nSirf wahi sticks chalengi jo list mein ADD ki hain.\nKoi bhi anjaan/copied stick KHUD DELETE ho jayegi.\n\n(Pehle apni sabhi asli sticks ADD kar lena!)')) return;
+  data.default = turnOn ? 'DELETE' : 'ON';
+  render(); await commit('whitelist '+(turnOn?'ON(delete)':'OFF'));
+}
 async function setAll(v){
   const msg = v==='OFF' ? 'Sabhi copies BAND kar di jayein? (owner.key wali chalegi)' : 'Sabhi copies wapas CHALU?';
   if(!confirm(msg)) return;
@@ -235,6 +255,7 @@ $('btnSave').onclick=async()=>{
 $('btnClose').onclick=()=>{ if(cfg.owner&&cfg.repo&&cfg.pat){ showSetup(false); } };
 $('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; showSetup(true); };
 $('btnRefresh').onclick=refresh;
+$('wlToggle').onclick=setDefault;
 $('btnKillAll').onclick=()=>setAll('OFF');
 $('btnRestoreAll').onclick=()=>setAll('ON');
 $('btnAdd').onclick=addStick;
