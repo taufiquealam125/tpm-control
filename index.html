@@ -274,8 +274,8 @@ async function addStick(){
 async function setAdminPw(){
   const has=!!data.adminpw;
   const p=prompt(has
-    ? 'Admin password BADLO (Report-only SERVER/EMAIL ke liye).\n(Khali chhod ke OK = password HATA do)'
-    : 'Admin password SET karo.\nReport-only stick pe SERVER/EMAIL kholne ke liye ye daalna padega:', '');
+    ? 'Admin password BADLO (sabhi sticks ke SERVER/EMAIL ke liye).\n(Khali chhod ke OK = password HATA do)'
+    : 'Admin password SET karo.\nSabhi sticks pe (owner chhodke) SERVER/EMAIL kholne ke liye ye daalna padega:', '');
   if(p===null) return;
   const v=p.trim();
   if(v===''){ delete data.adminpw; render(); await commit('clear adminpw'); return; }
