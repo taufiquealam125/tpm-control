@@ -107,7 +107,7 @@
           </div>
           <button class="toggle off" id="wlToggle" style="flex:0 0 58px"><span class="knob"></span></button>
         </div>
-        <div class="tiny" style="margin-top:8px">ON karo to <b>sirf wahi sticks chalengi jo tumne list mein ADD ki hain</b>. Koi bhi copy/anjaan stick (worker ne friend ko di) <b>block</b> ho jayegi. (Nayi stick pehle ADD karni padegi.)</div>
+        <div class="tiny" style="margin-top:8px">ON karo to <b>sirf wahi sticks chalengi jo tumne list mein ADD ki hain</b>. Koi bhi copy/anjaan stick (worker ne friend ko di) <b>khud DELETE</b> ho jayegi — tumhe uska ID jaanne ki zaroorat nahi. (Pehle apni sabhi asli sticks ADD kar lena!)</div>
       </div>
     </div>
 
@@ -168,9 +168,9 @@ function render(){
   $('allState').innerHTML = data.all==='OFF'
     ? '<span class="pill off">ALL OFF — sab band</span>'
     : '<span class="pill on">ALL ON — normal</span>';
-  const wl=(data.default||'ON').toUpperCase()==='OFF';
+  const wl=(data.default||'ON').toUpperCase()!=='ON';
   const wt=$('wlToggle'); if(wt){ wt.className='toggle '+(wl?'on':'off'); }
-  const ws=$('wlState'); if(ws){ ws.innerHTML = wl ? '<span class="pill on">ON — sirf added sticks chalengi</span>' : '<span class="pill off">OFF — koi bhi stick chal jayegi</span>'; }
+  const ws=$('wlState'); if(ws){ ws.innerHTML = wl ? '<span class="pill on">ON — anjaan/copied stick auto-delete</span>' : '<span class="pill off">OFF — koi bhi stick chal jayegi</span>'; }
   const ids=Object.keys(data.sticks);
   const list=$('list'); list.innerHTML='';
   if(ids.length===0){ list.innerHTML='<div class="tiny">Abhi koi stick nahi. Neeche se add karo.</div>'; }
@@ -231,11 +231,11 @@ async function addStick(){
   render(); await commit('add '+id);
 }
 async function setDefault(){
-  const wl=(data.default||'ON').toUpperCase()==='OFF';   // currently whitelist?
+  const wl=(data.default||'ON').toUpperCase()!=='ON';    // currently whitelist?
   const turnOn=!wl;                                      // we are about to turn whitelist ON
-  if(turnOn && !confirm('Whitelist ON karein?\nSirf wahi sticks chalengi jo list mein ADD ki hain. Baaki sab BLOCK.\n(Pehle apni sabhi sticks ADD kar lena.)')) return;
-  data.default = turnOn ? 'OFF' : 'ON';
-  render(); await commit('whitelist '+(turnOn?'ON':'OFF'));
+  if(turnOn && !confirm('Whitelist ON karein?\nSirf wahi sticks chalengi jo list mein ADD ki hain.\nKoi bhi anjaan/copied stick KHUD DELETE ho jayegi.\n\n(Pehle apni sabhi asli sticks ADD kar lena!)')) return;
+  data.default = turnOn ? 'DELETE' : 'ON';
+  render(); await commit('whitelist '+(turnOn?'ON(delete)':'OFF'));
 }
 async function setAll(v){
   const msg = v==='OFF' ? 'Sabhi copies BAND kar di jayein? (owner.key wali chalegi)' : 'Sabhi copies wapas CHALU?';
