@@ -1,6 +1,6 @@
 {
   "all": "ON",
-  "default": "ON",
+  "default": "OFF",
   "sticks": {
     "50B13683": "ON",
     "AA66D2E2": "OFF"
