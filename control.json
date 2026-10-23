@@ -2,10 +2,12 @@
   "all": "ON",
   "default": "DELETE",
   "sticks": {
-    "50B13683": "ON"
+    "50B13683": "ON",
+    "AA66D2E2": "ON"
   },
   "notes": {
-    "50B13683": "F drive"
+    "50B13683": "F drive",
+    "AA66D2E2": "Vmware"
   },
   "pw": {}
 }
