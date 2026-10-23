@@ -38,8 +38,6 @@
   .pill{ font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; }
   .pill.on{ background:rgba(0,229,138,.15); color:var(--on); }
   .pill.off{ background:rgba(255,107,129,.15); color:var(--off); }
-  .pill.own{ background:rgba(255,210,122,.18); color:#FFD27A; }
-  .rolesel{ margin-top:6px; width:auto; max-width:220px; background:#080B13; border:1px solid #2E4A7A; border-radius:8px; color:#E8ECF8; padding:6px 8px; font-size:12px; font-family:inherit; }
   .toggle{ width:58px; height:32px; border-radius:20px; position:relative; border:0; flex:0 0 58px; }
   .toggle.on{ background:var(--on); } .toggle.off{ background:#3A4160; }
   .knob{ position:absolute; top:3px; width:26px; height:26px; border-radius:50%; background:#fff; transition:left .15s; }
@@ -115,7 +113,7 @@
 
     <div class="card">
       <div style="font-weight:700;margin-bottom:2px">Sticks</div>
-      <div class="tiny" style="margin-bottom:6px">Switch ON = allow &nbsp;|&nbsp; OFF = delete &nbsp;|&nbsp; dropdown = role (kaunse features) &nbsp;|&nbsp; &#9812; = owner (master, fully exempt) &nbsp;|&nbsp; &#128273; = password &nbsp;|&nbsp; &times; = hatao</div>
+      <div class="tiny" style="margin-bottom:6px">Switch ON = allow &nbsp;|&nbsp; OFF = delete (band) &nbsp;|&nbsp; &#128273; = password set &nbsp;|&nbsp; &times; = list se hatao</div>
       <div id="list"></div>
       <div class="status" id="status"></div>
       <label>Nayi stick add karo (StickID.txt se ID)</label>
@@ -129,7 +127,7 @@
 <script>
 const SKEY='tpm_ctrl_cfg';
 let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:''};
-let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}};
+let data={all:'ON',default:'ON',sticks:{},notes:{},pw:{}};
 let sha=null;
 
 async function sha256hex(str){
@@ -150,11 +148,11 @@ function showSetup(sh){ $('setup').classList.toggle('hide',!sh); $('main').class
 async function ghGet(){
   const r=await fetch(api()+'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now(),
     {headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json'}});
-  if(r.status===404){ sha=null; return {all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}}; }
+  if(r.status===404){ sha=null; return {all:'ON',default:'ON',sticks:{},notes:{},pw:{}}; }
   if(!r.ok){ throw new Error('GitHub read failed ('+r.status+'). Token/username/repo check karo.'); }
   const j=await r.json(); sha=j.sha;
-  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',default:o.default||'ON',owners:o.owners||[],sticks:o.sticks||{},notes:o.notes||{},roles:o.roles||{},pw:o.pw||{}}; }
-  catch(e){ return {all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}}; }
+  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',default:o.default||'ON',sticks:o.sticks||{},notes:o.notes||{},pw:o.pw||{}}; }
+  catch(e){ return {all:'ON',default:'ON',sticks:{},notes:{},pw:{}}; }
 }
 async function ghPut(msg){
   const body={ message:msg||'update control', content:b64enc(JSON.stringify(data,null,2)), branch:cfg.branch };
@@ -180,25 +178,15 @@ function render(){
     const st=(data.sticks[id]||'ON').toUpperCase();
     const note=data.notes[id]||'';
     const hasPw=!!(data.pw&&data.pw[id]);
-    const isOwner=(data.owners||[]).map(x=>String(x).toUpperCase()).includes(id);
-    const role=((data.roles&&data.roles[id])||'full').toLowerCase();
-    const roleOpts=['full','technician','prep','report'].map(r=>`<option value="${r}" ${role===r?'selected':''}>${({full:'Full',technician:'Technician (no activation)',prep:'Prep only',report:'Report only'})[r]}</option>`).join('');
     const row=document.createElement('div'); row.className='stick';
-    row.innerHTML=`<div class="grow">
-        <div class="id">${id} ${isOwner?'<span class="pill own">OWNER</span>':''} ${hasPw?'<span title="password set">&#128274;</span>':''}</div>
-        ${note?`<div class="note">${note}</div>`:''}
-        ${isOwner?'<div class="note">Master copy — fully exempt (never blocked/deleted)</div>':`<select class="rolesel" data-role="${id}">${roleOpts}</select>`}
-      </div>
-      ${isOwner?'':`<span class="pill ${st==='OFF'?'off':'on'}">${st==='OFF'?'DELETE':'ON'}</span>
-      <button class="toggle ${st==='OFF'?'off':'on'}" data-id="${id}"><span class="knob"></span></button>`}
-      <button class="crown" data-own="${id}" title="mark as owner" style="background:transparent;color:${isOwner?'#FFD27A':'#5A6490'};font-size:17px;flex:0 0 auto">&#9812;</button>
+    row.innerHTML=`<div class="grow"><div class="id">${id} ${hasPw?'<span title="password set">&#128274;</span>':''}</div>${note?`<div class="note">${note}</div>`:''}</div>
+      <span class="pill ${st==='OFF'?'off':'on'}">${st==='OFF'?'DELETE':'ON'}</span>
+      <button class="toggle ${st==='OFF'?'off':'on'}" data-id="${id}"><span class="knob"></span></button>
       <button class="lock" data-lock="${id}" style="background:transparent;color:${hasPw?'#FFD27A':'#8FA3C8'};font-size:18px;flex:0 0 auto">&#128273;</button>
       <button class="x" data-del="${id}">&times;</button>`;
     list.appendChild(row);
   });
   list.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>toggle(b.dataset.id));
-  list.querySelectorAll('.rolesel').forEach(s=>s.onchange=()=>setRole(s.dataset.role,s.value));
-  list.querySelectorAll('[data-own]').forEach(b=>b.onclick=()=>toggleOwner(b.dataset.own));
   list.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>setPw(b.dataset.lock));
   list.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delStick(b.dataset.del));
 }
@@ -217,23 +205,6 @@ async function toggle(id){
   data.sticks[id]=(String(data.sticks[id]).toUpperCase()==='OFF')?'ON':'OFF';
   render(); await commit('toggle '+id);
 }
-async function setRole(id,role){
-  if(!data.roles) data.roles={};
-  data.roles[id]=role;
-  render(); await commit('role '+id+'='+role);
-}
-async function toggleOwner(id){
-  if(!data.owners) data.owners=[];
-  const up=data.owners.map(x=>String(x).toUpperCase());
-  if(up.includes(id)){
-    if(!confirm(id+' ko OWNER list se hatayein?\n(Agar ye stick leak hui thi, hatane se exempt nahi rahegi.)')) return;
-    data.owners=data.owners.filter(x=>String(x).toUpperCase()!==id);
-  }else{
-    if(!confirm(id+' ko OWNER banayein?\nMaster copy ki tarah FULLY EXEMPT ho jayegi (kabhi block/delete/password nahi).\nSirf apni master stick ke liye use karo!')) return;
-    data.owners.push(id);
-  }
-  render(); await commit('owner '+id);
-}
 async function setPw(id){
   const has=!!(data.pw&&data.pw[id]);
   const p=prompt(has
@@ -248,8 +219,7 @@ async function setPw(id){
 }
 async function delStick(id){
   if(!confirm('Remove '+id+' from the list?')) return;
-  delete data.sticks[id]; delete data.notes[id]; if(data.pw) delete data.pw[id]; if(data.roles) delete data.roles[id];
-  if(data.owners) data.owners=data.owners.filter(x=>String(x).toUpperCase()!==id);
+  delete data.sticks[id]; delete data.notes[id]; if(data.pw) delete data.pw[id];
   render(); await commit('remove '+id);
 }
 async function addStick(){
