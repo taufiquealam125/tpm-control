@@ -6,17 +6,13 @@
   ],
   "sticks": {
     "50B13683": "ON",
-    "AA66D2E2": "OFF",
     "EC5D3464": "ON"
   },
   "notes": {
     "50B13683": "F drive",
-    "AA66D2E2": "Vmware",
     "EC5D3464": "MD TAUFIQUE ALAM"
   },
-  "roles": {
-    "AA66D2E2": "full"
-  },
+  "roles": {},
   "pw": {},
   "adminpw": "8a8b2d66735ed03d0841027e42d38806eedd8e5bd5da54270f958a55d509091f"
 }
