@@ -1,5 +1,5 @@
 // Service worker - NETWORK-FIRST so app updates show up immediately after a GitHub change.
-const C='tpm-ctrl-v4';
+const C='tpm-ctrl-v5';
 self.addEventListener('install', e=>{ self.skipWaiting(); });
 self.addEventListener('activate', e=>{
   e.waitUntil((async()=>{
