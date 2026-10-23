@@ -2,14 +2,10 @@
   "all": "ON",
   "default": "ON",
   "sticks": {
-    "AA66D2E2": "OFF",
     "50B13683": "ON"
   },
   "notes": {
-    "AA66D2E2": "Vmware",
     "50B13683": "F drive"
   },
-  "pw": {
-    "AA66D2E2": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"
-  }
+  "pw": {}
 }
