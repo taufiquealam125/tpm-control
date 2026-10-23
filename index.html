@@ -119,7 +119,7 @@
           </div>
           <button class="blue" id="btnAdminPw" style="flex:0 0 auto;padding:8px 14px">&#128273; Set</button>
         </div>
-        <div class="tiny" style="margin-top:8px"><b>Report-only</b> stick pe jab worker <b>SERVER</b> ya <b>EMAIL</b> pe click karega, ye password maangega. Khali chhod ke OK = password hata do.</div>
+        <div class="tiny" style="margin-top:8px"><b>Sabhi</b> sticks pe (owner/master chhod ke) jab worker <b>SERVER</b> ya <b>EMAIL</b> pe click karega, ye password maangega. Khali chhod ke OK = password hata do.</div>
       </div>
     </div>
 
@@ -182,7 +182,7 @@ function render(){
     : '<span class="pill on">ALL ON — normal</span>';
   const wl=(data.default||'ON').toUpperCase()!=='ON';
   const wt=$('wlToggle'); if(wt){ wt.className='toggle '+(wl?'on':'off'); }
-  const ap=$('apState'); if(ap){ ap.textContent=data.adminpw?'Set hai (SERVER/EMAIL locked for report-only)':'Set nahi hai (koi lock nahi)'; }
+  const ap=$('apState'); if(ap){ ap.textContent=data.adminpw?'Set hai (SERVER/EMAIL locked on all sticks)':'Set nahi hai (koi lock nahi)'; }
   const ws=$('wlState'); if(ws){ ws.innerHTML = wl ? '<span class="pill on">ON — anjaan/copied stick auto-delete</span>' : '<span class="pill off">OFF — koi bhi stick chal jayegi</span>'; }
   const ids=Object.keys(data.sticks);
   const list=$('list'); list.innerHTML='';
