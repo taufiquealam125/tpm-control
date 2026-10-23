@@ -1,6 +1,7 @@
 {
   "all": "ON",
   "default": "ON",
+  "owners": [],
   "sticks": {
     "50B13683": "ON",
     "AA66D2E2": "ON"
@@ -8,6 +9,9 @@
   "notes": {
     "50B13683": "F drive",
     "AA66D2E2": "Vmware"
+  },
+  "roles": {
+    "AA66D2E2": "prep"
   },
   "pw": {
     "AA66D2E2": "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
