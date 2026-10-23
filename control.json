@@ -1,6 +1,6 @@
 {
   "all": "ON",
-  "default": "DELETE",
+  "default": "ON",
   "sticks": {
     "50B13683": "ON",
     "AA66D2E2": "ON"
