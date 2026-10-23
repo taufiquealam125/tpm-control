@@ -139,7 +139,7 @@
 <script>
 const SKEY='tpm_ctrl_cfg';
 let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:''};
-let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}};
+let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:''};
 let sha=null;
 
 async function sha256hex(str){
@@ -160,11 +160,13 @@ function showSetup(sh){ $('setup').classList.toggle('hide',!sh); $('main').class
 async function ghGet(){
   const r=await fetch(api()+'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now(),
     {headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json'}});
-  if(r.status===404){ sha=null; return {all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}}; }
+  const DEF={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:''};
+  if(r.status===404){ sha=null; return Object.assign({},DEF); }
   if(!r.ok){ throw new Error('GitHub read failed ('+r.status+'). Token/username/repo check karo.'); }
   const j=await r.json(); sha=j.sha;
-  try{ const o=JSON.parse(b64dec(j.content)); return {all:o.all||'ON',default:o.default||'ON',owners:o.owners||[],sticks:o.sticks||{},notes:o.notes||{},roles:o.roles||{},pw:o.pw||{}}; }
-  catch(e){ return {all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{}}; }
+  // Object.assign keeps EVERY field from the file (adminpw and any future ones), only filling missing ones with defaults.
+  try{ const o=JSON.parse(b64dec(j.content)); return Object.assign({},DEF,o); }
+  catch(e){ return Object.assign({},DEF); }
 }
 async function ghPut(msg){
   const body={ message:msg||'update control', content:b64enc(JSON.stringify(data,null,2)), branch:cfg.branch };
