@@ -1,7 +1,9 @@
 {
   "all": "ON",
   "default": "ON",
-  "owners": [],
+  "owners": [
+    "EC5D3464"
+  ],
   "sticks": {
     "50B13683": "ON",
     "AA66D2E2": "ON",
