@@ -2,7 +2,8 @@
   "all": "ON",
   "default": "DELETE",
   "owners": [
-    "EC5D3464"
+    "EC5D3464",
+    "348B1258"
   ],
   "sticks": {
     "50B13683": "ON",
