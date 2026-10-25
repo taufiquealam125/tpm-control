@@ -78,6 +78,8 @@
     <input id="path" value="control.json" autocapitalize="off" autocorrect="off"/>
     <label>Personal Access Token (PAT)</label>
     <input id="pat" type="password" placeholder="ghp_... (Contents: Read & write)" autocapitalize="off" autocorrect="off"/>
+    <label>Devices repo (optional - jaise: tpm-devices)</label>
+    <input id="devRepo" placeholder="tpm-devices (khali = Devices section off)" autocapitalize="off" autocorrect="off"/>
     <div class="row" style="margin-top:12px">
       <button class="green" id="btnSave">SAVE &amp; CONNECT</button>
       <button class="muted" id="btnClose">CLOSE</button>
@@ -134,11 +136,21 @@
       <input id="newNote" placeholder="jaise: Rahul ki stick"/>
       <button class="accent" id="btnAdd" style="width:100%;margin-top:10px">+ ADD STICK (ON)</button>
     </div>
+
+    <div class="card hide" id="devCard">
+      <div class="head">
+        <div style="font-weight:700" id="devTitle">Devices</div>
+        <button class="blue" id="btnDevRefresh" style="flex:0 0 auto;padding:8px 14px">&#8635;</button>
+      </div>
+      <div class="tiny" style="margin:2px 0 8px">Jin PCs pe tool chala hai woh yahan dikhte hain. <b>REVOKE</b> = us stick ka access turant khatam (band/delete).</div>
+      <div id="devList"></div>
+      <div class="status" id="devStatus"></div>
+    </div>
   </div>
 
 <script>
 const SKEY='tpm_ctrl_cfg';
-let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:''};
+let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:'',devRepo:''};
 let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:''};
 let sha=null;
 
@@ -220,6 +232,7 @@ async function refresh(){
   setStatus('Loading…');
   try{ data=await ghGet(); render(); setStatus('Updated '+new Date().toLocaleTimeString()); }
   catch(e){ setStatus(e.message,true); }
+  try{ refreshDevices(); }catch(e){}
 }
 async function commit(msg){
   setStatus('Saving…');
@@ -297,18 +310,92 @@ async function setAll(v){
   data.all=v; render(); await commit('ALL '+v);
 }
 
+// ---- Devices (tool check-ins from the tpm-devices repo) ----
+function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function ago(sec){
+  if(!sec) return '';
+  let d=Math.floor(Date.now()/1000)-sec;
+  if(d<0) d=0;
+  if(d<60) return d+'s ago';
+  if(d<3600) return Math.floor(d/60)+'m ago';
+  if(d<86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
+}
+async function loadDevices(){
+  if(!cfg.devRepo) return [];
+  const base=`https://api.github.com/repos/${cfg.owner}/${encodeURIComponent(cfg.devRepo)}/contents/devices`;
+  const h={'Accept':'application/vnd.github+json'};
+  if(cfg.pat) h['Authorization']='token '+cfg.pat;
+  let r=await fetch(base+'?t='+Date.now(),{headers:h});
+  if((r.status===401||r.status===403)&&cfg.pat){ r=await fetch(base+'?t='+Date.now(),{headers:{'Accept':'application/vnd.github+json'}}); }
+  if(r.status===404) return [];
+  if(!r.ok) throw new Error('Devices read failed ('+r.status+'). Repo public hai?');
+  const items=await r.json();
+  const files=Array.isArray(items)?items.filter(x=>x.name&&x.name.endsWith('.json')):[];
+  const out=[];
+  for(const f of files){
+    try{ const rr=await fetch(f.download_url+'?t='+Date.now()); if(rr.ok){ out.push(await rr.json()); } }catch(e){}
+  }
+  out.sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0));
+  return out;
+}
+function renderDevices(arr){
+  const el=$('devList'); if(!el) return; el.innerHTML='';
+  $('devTitle').textContent='Devices ('+arr.length+')';
+  if(!arr.length){ el.innerHTML='<div class="tiny">Abhi koi device check-in nahi hua. Tool kisi PC pe chalao (internet on), phir Refresh.</div>'; return; }
+  const now=Math.floor(Date.now()/1000);
+  arr.forEach(d=>{
+    const id=String(d.stickId||'').toUpperCase();
+    const nm=esc(d.name||'PC');
+    const seen=d.lastSeen||0;
+    const dot=(now-seen<600)?'#00E58A':((now-seen<86400)?'#FFB020':'#5A6490');
+    const revoked=(String(data.sticks[id]||'').toUpperCase()==='OFF');
+    const extra=[id, d.order?esc(d.order):'', ago(seen)].filter(Boolean).join(' · ');
+    const row=document.createElement('div'); row.className='stick';
+    row.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${dot};flex:0 0 10px;margin-right:4px"></span>
+      <div class="grow">
+        <div class="id">${nm} ${revoked?'<span class="pill off">REVOKED</span>':''}</div>
+        <div class="note">${extra}</div>
+      </div>
+      <button class="${revoked?'green':'red'}" data-rev="${id}" style="flex:0 0 auto;padding:7px 12px;font-size:11px;font-weight:800">${revoked?'ALLOW':'REVOKE'}</button>`;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('[data-rev]').forEach(b=>b.onclick=()=>revokeDevice(b.dataset.rev));
+}
+async function revokeDevice(id){
+  const revoked=(String(data.sticks[id]||'').toUpperCase()==='OFF');
+  if(revoked){
+    if(!confirm(id+' ka access wapas CHALU karein?')) return;
+    data.sticks[id]='ON'; render(); await commit('allow '+id);
+  }else{
+    if(!confirm(id+' ka access ABHI khatam karein?\nUs PC pe tool agli internet-check pe band/delete ho jayega.')) return;
+    data.sticks[id]='OFF'; render(); await commit('revoke '+id);
+  }
+  refreshDevices();
+}
+async function refreshDevices(){
+  const card=$('devCard'); if(!card) return;
+  if(!cfg.devRepo){ card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+  $('devStatus').textContent='Loading devices…'; $('devStatus').style.color='#8FA3C8';
+  try{ renderDevices(await loadDevices()); $('devStatus').textContent='Updated '+new Date().toLocaleTimeString(); }
+  catch(e){ $('devStatus').textContent=e.message; $('devStatus').style.color='#FF6B81'; }
+}
+
 $('btnSave').onclick=async()=>{
   cfg.owner=$('owner').value.trim(); cfg.repo=$('repo').value.trim();
   cfg.branch=($('branch').value.trim()||'main'); cfg.path=($('path').value.trim()||'control.json');
   cfg.pat=$('pat').value.trim();
+  cfg.devRepo=$('devRepo').value.trim();
   if(!cfg.owner||!cfg.repo||!cfg.pat){ alert('Username, repo aur token teeno chahiye.'); return; }
   save();
-  try{ data=await ghGet(); if(sha===null){ await ghPut('init control'); } showSetup(false); render(); setStatus('Connected.'); }
+  try{ data=await ghGet(); if(sha===null){ await ghPut('init control'); } showSetup(false); render(); setStatus('Connected.'); refreshDevices(); }
   catch(e){ alert(e.message); }
 };
 $('btnClose').onclick=()=>{ if(cfg.owner&&cfg.repo&&cfg.pat){ showSetup(false); } };
-$('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; showSetup(true); };
+$('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; $('devRepo').value=cfg.devRepo||''; showSetup(true); };
 $('btnRefresh').onclick=refresh;
+$('btnDevRefresh').onclick=refreshDevices;
 $('wlToggle').onclick=setDefault;
 $('btnAdminPw').onclick=setAdminPw;
 $('btnKillAll').onclick=()=>setAll('OFF');
