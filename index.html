@@ -341,7 +341,9 @@ async function loadDevices(){
 }
 function renderDevices(arr){
   const el=$('devList'); if(!el) return; el.innerHTML='';
-  $('devTitle').textContent='Devices ('+arr.length+')';
+  const pcs=new Set(arr.map(d=>String(d.name||'').trim().toUpperCase()).filter(Boolean)).size;
+  const ns=arr.length, np=pcs;
+  $('devTitle').innerHTML='Devices &nbsp;<span style="color:#00E58A">'+ns+'</span> stick'+(ns===1?'':'s')+' &nbsp;·&nbsp; <span style="color:#5AA9FF">'+np+'</span> PC'+(np===1?'':'s');
   if(!arr.length){ el.innerHTML='<div class="tiny">Abhi koi device check-in nahi hua. Tool kisi PC pe chalao (internet on), phir Refresh.</div>'; return; }
   const now=Math.floor(Date.now()/1000);
   arr.forEach(d=>{
