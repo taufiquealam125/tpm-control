@@ -3,7 +3,8 @@
   "default": "DELETE",
   "owners": [
     "EC5D3464",
-    "SERVER-192.168.200.34"
+    "SERVER-192.168.200.34",
+    "40592E86"
   ],
   "sticks": {
     "50B13683": "ON",
