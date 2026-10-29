@@ -3,24 +3,21 @@
   "default": "DELETE",
   "owners": [
     "EC5D3464",
-    "SERVER-192.168.200.34",
-    "40592E86"
+    "SERVER-192.168.200.34"
   ],
   "sticks": {
     "50B13683": "ON",
     "EC5D3464": "ON",
     "16466B89": "ON",
     "AA66D2E2": "ON",
-    "SERVER-192.168.200.34": "ON",
-    "40592E86": "ON"
+    "SERVER-192.168.200.34": "ON"
   },
   "notes": {
     "50B13683": "Vmware",
     "EC5D3464": "MD TAUFIQUE ALAM",
     "16466B89": "My PC",
     "AA66D2E2": "Vmware workstation",
-    "SERVER-192.168.200.34": "SERVER",
-    "40592E86": "Script Batch"
+    "SERVER-192.168.200.34": "SERVER"
   },
   "roles": {
     "16466B89": "full"
