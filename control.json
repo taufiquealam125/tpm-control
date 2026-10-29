@@ -10,14 +10,16 @@
     "EC5D3464": "ON",
     "16466B89": "ON",
     "AA66D2E2": "ON",
-    "SERVER-192.168.200.34": "ON"
+    "SERVER-192.168.200.34": "ON",
+    "40592E86": "ON"
   },
   "notes": {
     "50B13683": "Vmware",
     "EC5D3464": "MD TAUFIQUE ALAM",
     "16466B89": "My PC",
     "AA66D2E2": "Vmware workstation",
-    "SERVER-192.168.200.34": "SERVER"
+    "SERVER-192.168.200.34": "SERVER",
+    "40592E86": "Script Batch"
   },
   "roles": {
     "16466B89": "full"
