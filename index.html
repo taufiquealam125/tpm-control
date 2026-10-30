@@ -142,7 +142,7 @@
         <div style="font-weight:700" id="devTitle">Devices</div>
         <button class="blue" id="btnDevRefresh" style="flex:0 0 auto;padding:8px 14px">&#8635;</button>
       </div>
-      <div class="tiny" style="margin:2px 0 8px">Jin PCs pe tool chala hai woh yahan dikhte hain. <b>REVOKE</b> = us stick ka access turant khatam (band/delete).</div>
+      <div class="tiny" style="margin:2px 0 8px">Jin devices pe tool <b>abhi present</b> hai woh yahan dikhte hain. <span style="color:#00E58A">● hara</span>=tool khula hai abhi · <span style="color:#FFB020">●</span>=present, recently chala · <span style="color:#8FA3C8">●</span>=kaafi der se nahi chala. Tool jab REVOKE/self-delete hota hai to apne aap list se hat jaata hai. <b>REVOKE</b> = access turant khatam (band/delete).</div>
       <div id="devList"></div>
       <div class="status" id="devStatus"></div>
     </div>
@@ -151,7 +151,7 @@
 <script>
 const SKEY='tpm_ctrl_cfg';
 let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:'',devRepo:''};
-let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:''};
+let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:'',log:{}};
 let sha=null;
 
 async function sha256hex(str){
@@ -172,7 +172,7 @@ function showSetup(sh){ $('setup').classList.toggle('hide',!sh); $('main').class
 async function ghGet(){
   const r=await fetch(api()+'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now(),
     {headers:{'Authorization':'token '+cfg.pat,'Accept':'application/vnd.github+json'}});
-  const DEF={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:''};
+  const DEF={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:'',log:{}};
   if(r.status===404){ sha=null; return Object.assign({},DEF); }
   if(!r.ok){ throw new Error('GitHub read failed ('+r.status+'). Token/username/repo check karo.'); }
   const j=await r.json(); sha=j.sha;
@@ -207,6 +207,7 @@ function render(){
     const hasPw=!!(data.pw&&data.pw[id]);
     const isOwner=(data.owners||[]).map(x=>String(x).toUpperCase()).includes(id);
     const role=((data.roles&&data.roles[id])||'full').toLowerCase();
+    const logHidden=!!(data.log&&String(data.log[id]||'ON').toUpperCase()==='OFF');
     const roleOpts=['full','technician','prep','report'].map(r=>`<option value="${r}" ${role===r?'selected':''}>${({full:'Full',technician:'Technician (no activation)',prep:'Prep only',report:'Report only'})[r]}</option>`).join('');
     const row=document.createElement('div'); row.className='stick';
     row.innerHTML=`<div class="grow">
@@ -218,6 +219,7 @@ function render(){
       <button class="toggle ${st==='OFF'?'off':'on'}" data-id="${id}"><span class="knob"></span></button>`}
       <button class="crown" data-own="${id}" title="mark as owner" style="background:transparent;color:${isOwner?'#FFD27A':'#5A6490'};font-size:17px;flex:0 0 auto">&#9812;</button>
       <button class="lock" data-lock="${id}" style="background:transparent;color:${hasPw?'#FFD27A':'#8FA3C8'};font-size:18px;flex:0 0 auto">&#128273;</button>
+      <button class="logtog" data-log="${id}" title="Activity Log ${logHidden?'HIDDEN — is stick pe log nahi dikhega':'visible — is stick pe log dikhega'}" style="background:transparent;color:${logHidden?'#5A6490':'#00E58A'};font-size:17px;flex:0 0 auto">${logHidden?'&#128584;':'&#128065;'}</button>
       <button class="x" data-del="${id}">&times;</button>`;
     list.appendChild(row);
   });
@@ -225,6 +227,7 @@ function render(){
   list.querySelectorAll('.rolesel').forEach(s=>s.onchange=()=>setRole(s.dataset.role,s.value));
   list.querySelectorAll('[data-own]').forEach(b=>b.onclick=()=>toggleOwner(b.dataset.own));
   list.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>setPw(b.dataset.lock));
+  list.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>toggleLog(b.dataset.log));
   list.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delStick(b.dataset.del));
 }
 
@@ -247,6 +250,14 @@ async function setRole(id,role){
   if(!data.roles) data.roles={};
   data.roles[id]=role;
   render(); await commit('role '+id+'='+role);
+}
+// Activity Log visibility for THIS stick: eye = visible, 🙈 = hidden.
+// Owner chooses which workers see the Activity Log; others ka log hidden rahega.
+async function toggleLog(id){
+  if(!data.log) data.log={};
+  const hidden=String(data.log[id]||'ON').toUpperCase()==='OFF';
+  data.log[id]= hidden ? 'ON' : 'OFF';   // flip
+  render(); await commit('log '+id+'='+data.log[id]);
 }
 async function toggleOwner(id){
   if(!data.owners) data.owners=[];
@@ -274,7 +285,7 @@ async function setPw(id){
 }
 async function delStick(id){
   if(!confirm('Remove '+id+' from the list?')) return;
-  delete data.sticks[id]; delete data.notes[id]; if(data.pw) delete data.pw[id]; if(data.roles) delete data.roles[id];
+  delete data.sticks[id]; delete data.notes[id]; if(data.pw) delete data.pw[id]; if(data.roles) delete data.roles[id]; if(data.log) delete data.log[id];
   if(data.owners) data.owners=data.owners.filter(x=>String(x).toUpperCase()!==id);
   render(); await commit('remove '+id);
 }
@@ -341,23 +352,27 @@ async function loadDevices(){
 }
 function renderDevices(arr){
   const el=$('devList'); if(!el) return; el.innerHTML='';
-  const pcs=new Set(arr.map(d=>String(d.name||'').trim().toUpperCase()).filter(Boolean)).size;
-  const ns=arr.length, np=pcs;
-  $('devTitle').innerHTML='Devices &nbsp;<span style="color:#00E58A">'+ns+'</span> stick'+(ns===1?'':'s')+' &nbsp;·&nbsp; <span style="color:#5AA9FF">'+np+'</span> PC'+(np===1?'':'s');
-  if(!arr.length){ el.innerHTML='<div class="tiny">Abhi koi device check-in nahi hua. Tool kisi PC pe chalao (internet on), phir Refresh.</div>'; return; }
   const now=Math.floor(Date.now()/1000);
+  const activeN=arr.filter(d=>now-(d.lastSeen||0)<900).length;   // tool OPEN right now (heartbeat <15m)
+  const ns=arr.length;
+  $('devTitle').innerHTML='Tool present: &nbsp;<span style="color:#00E58A">'+ns+'</span> device'+(ns===1?'':'s')+' &nbsp;·&nbsp; <span style="color:#5AA9FF">'+activeN+'</span> abhi active';
+  if(!arr.length){ el.innerHTML='<div class="tiny">Abhi kahin tool present nahi (ya check-in off). Tool kisi device pe chalao (internet on), phir Refresh.</div>'; return; }
   arr.forEach(d=>{
     const id=String(d.stickId||'').toUpperCase();
     const nm=esc(d.name||'PC');
-    const seen=d.lastSeen||0;
-    const dot=(now-seen<600)?'#00E58A':((now-seen<86400)?'#FFB020':'#5A6490');
+    const seen=d.lastSeen||0; const age=now-seen;
+    let dot,stat;
+    if(age<900){ dot='#00E58A'; stat='<span style="color:#00E58A;font-weight:800">● ABHI ACTIVE (tool khula hai)</span>'; }
+    else if(age<86400){ dot='#FFB020'; stat='<span style="color:#FFB020">present · last active '+ago(seen)+'</span>'; }
+    else { dot='#5A6490'; stat='<span style="color:#8FA3C8">'+ago(seen)+' se nahi chala (shayad hata diya)</span>'; }
     const revoked=(String(data.sticks[id]||'').toUpperCase()==='OFF');
-    const extra=[id, d.order?esc(d.order):'', ago(seen)].filter(Boolean).join(' · ');
+    const extra=[id, d.order?esc(d.order):''].filter(Boolean).join(' · ');
     const row=document.createElement('div'); row.className='stick';
     row.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${dot};flex:0 0 10px;margin-right:4px"></span>
       <div class="grow">
         <div class="id">${nm} ${revoked?'<span class="pill off">REVOKED</span>':''}</div>
         <div class="note">${extra}</div>
+        <div class="note">${stat}</div>
       </div>
       <button class="${revoked?'green':'red'}" data-rev="${id}" style="flex:0 0 auto;padding:7px 12px;font-size:11px;font-weight:800">${revoked?'ALLOW':'REVOKE'}</button>`;
     el.appendChild(row);
