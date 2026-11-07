@@ -194,6 +194,10 @@
         <div class="tiny" id="timerLabel" style="margin-top:8px;text-align:center">Tool launch ho raha hai…</div>
       </div>
       <div class="status" id="startState"></div>
+      <label style="display:flex;align-items:center;gap:9px;margin-top:12px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="chkNoSleep" style="width:18px;height:18px;flex:0 0 auto"/>
+        <span class="tiny">&#127769; PCs ko <b>sleep se roko</b> &mdash; tool khula rahe tab tak PC jagaa rahega (prep beech me ruke nahi)</span>
+      </label>
     </div>
 
     <div class="card">
@@ -274,6 +278,7 @@ function render(){
   $('allState').innerHTML = data.all==='OFF'
     ? '<span class="pill off">ALL OFF — everything off</span>'
     : '<span class="pill on">ALL ON — normal</span>';
+  const cns=$('chkNoSleep'); if(cns){ cns.checked = (data.nosleep !== false); }   // default ON
   const wl=(data.default||'ON').toUpperCase()!=='ON';
   const wt=$('wlToggle'); if(wt){ wt.className='toggle '+(wl?'on':'off'); }
   const ap=$('apState'); if(ap){ ap.textContent=data.adminpw?'Set (SERVER/EMAIL locked on all sticks)':'Not set (no lock)'; }
@@ -649,6 +654,7 @@ $('btnKillAll').onclick=()=>setAll('OFF');
 $('btnRestoreAll').onclick=()=>setAll('ON');
 $('btnStartAll').onclick=startAllPcs;
 $('btnClearHist').onclick=clearHistory;
+$('chkNoSleep').onchange=async()=>{ data.nosleep = $('chkNoSleep').checked; await commit('nosleep '+data.nosleep); };
 $('btnAdd').onclick=addStick;
 
 load();
