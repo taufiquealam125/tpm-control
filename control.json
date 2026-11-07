@@ -1,0 +1,43 @@
+{
+  "all": "ON",
+  "default": "DELETE",
+  "owners": [
+    "B087F0F1",
+    "SERVER-192.168.200.34",
+    "EC5D3464",
+    "AA66D2E2"
+  ],
+  "sticks": {
+    "B087F0F1": "OFF",
+    "SERVER-192.168.200.34": "ON",
+    "EC5D3464": "OFF",
+    "AA66D2E2": "OFF",
+    "8A37FC74": "OFF",
+    "MB-DEFAULT STRING": "ON",
+    "348B1258": "ON",
+    "50B13683": "OFF"
+  },
+  "notes": {
+    "B087F0F1": "My-Own-PC- D-Drive",
+    "SERVER-192.168.200.34": "OffICE_SERVER",
+    "EC5D3464": "My Flash Drive",
+    "AA66D2E2": "VM-Workstation"
+  },
+  "roles": {},
+  "pw": {},
+  "adminpw": "8a8b2d66735ed03d0841027e42d38806eedd8e5bd5da54270f958a55d509091f",
+  "linkpw": "2ba10603e933dc7381e0b3345854234669ef7b224b6509df43e286f954a1f378",
+  "log": {},
+  "mode": {
+    "SERVER-192.168.200.34": "sysprep"
+  },
+  "auto": {
+    "AA66D2E2": "ON",
+    "EC5D3464": "ON"
+  },
+  "run": {
+    "id": "r1794061540276134",
+    "ts": 1794061540,
+    "target": "all"
+  }
+}
