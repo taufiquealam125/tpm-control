@@ -4,7 +4,8 @@
   "owners": [
     "B087F0F1",
     "EC5D3464",
-    "AA66D2E2"
+    "AA66D2E2",
+    "SERVER-192.168.200.34"
   ],
   "sticks": {
     "B087F0F1": "OFF",
