@@ -29,9 +29,7 @@
   "adminpw": "8a8b2d66735ed03d0841027e42d38806eedd8e5bd5da54270f958a55d509091f",
   "linkpw": "2ba10603e933dc7381e0b3345854234669ef7b224b6509df43e286f954a1f378",
   "log": {},
-  "mode": {
-    "SERVER-192.168.200.34": "sysprep"
-  },
+  "mode": {},
   "auto": {
     "AA66D2E2": "ON",
     "EC5D3464": "ON"
