@@ -183,6 +183,16 @@
       <div class="ctitle" style="margin-bottom:6px"><span class="ic">&#128640;</span> Start PCs</div>
       <div class="tiny" style="margin-bottom:10px">Press START — every PC running the Mobile Agent launches the tool from the server and runs its <b>selected Mode</b> (zero-click). The tool does not need to be open; the Agent keeps watch. (Needs the Agent installed + internet on the PCs.)</div>
       <button class="green big" id="btnStartAll" style="width:100%">&#9654;&nbsp; START all PCs</button>
+      <div id="startTimer" class="hide" style="display:flex;flex-direction:column;align-items:center;margin-top:14px">
+        <svg width="118" height="118" viewBox="0 0 118 118">
+          <circle cx="59" cy="59" r="50" fill="none" stroke="#1d2840" stroke-width="10"/>
+          <circle id="timerRing" cx="59" cy="59" r="50" fill="none" stroke="#15E08A" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="314.159" stroke-dashoffset="0"
+                  transform="rotate(-90 59 59)" style="transition:stroke-dashoffset .95s linear,stroke .3s"/>
+          <text id="timerNum" x="59" y="70" text-anchor="middle" font-size="34" font-weight="800" fill="#eaf1ff">0</text>
+        </svg>
+        <div class="tiny" id="timerLabel" style="margin-top:8px;text-align:center">Tool launch ho raha hai…</div>
+      </div>
       <div class="status" id="startState"></div>
     </div>
 
@@ -429,7 +439,29 @@ async function startAllPcs(){
   data.run={ id:'r'+Date.now()+Math.floor(Math.random()*1000), ts:Math.floor(Date.now()/1000), target:'all' };
   const el=$('startState'); if(el){ el.textContent='Sending START…'; el.style.color='#8FA3C8'; }
   await commit('START all PCs');
-  if(el){ el.textContent='START sent — PCs will launch within ~30 seconds.'; el.style.color='#15E08A'; }
+  if(el){ el.textContent='START sent — launch hone wala hai…'; el.style.color='#15E08A'; }
+  startCountdown(LAUNCH_SECS);
+}
+
+// Expected launch time (seconds). Relay lagaya hai to 10-12 karo; seedha GitHub (no relay) = ~45-50.
+const LAUNCH_SECS = 50;
+let _timerIv = null;
+function startCountdown(sec){
+  const box=$('startTimer'), ring=$('timerRing'), num=$('timerNum'), lbl=$('timerLabel');
+  if(!box||!ring||!num) return;
+  const C = 2*Math.PI*50;                 // ring circumference (r=50)
+  box.classList.remove('hide');
+  const total = sec; let t = sec;
+  const draw = ()=>{
+    num.textContent = Math.max(t,0);
+    const frac = Math.max(t,0)/total;
+    ring.style.strokeDashoffset = String(C*(1-frac));
+    if(t>0){ ring.style.stroke='#15E08A'; lbl.textContent='Tool launch ho raha hai… '+t+'s'; }
+    else   { ring.style.stroke='#5AA9FF'; num.textContent='✓'; lbl.textContent='PCs ab tak launch ho chuke honge ✅'; }
+  };
+  if(_timerIv) clearInterval(_timerIv);
+  draw();
+  _timerIv = setInterval(()=>{ t--; draw(); if(t<0){ clearInterval(_timerIv); _timerIv=null; } }, 1000);
 }
 
 // ---- CLEAR GITHUB HISTORY ----------------------------------------------
