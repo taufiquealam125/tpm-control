@@ -1,0 +1,83 @@
+{
+  "all": "ON",
+  "default": "DELETE",
+  "owners": [
+    "B087F0F1",
+    "EC5D3464",
+    "SERVER-192.168.200.34",
+    "C6D6BFE6",
+    "AA66D2E2",
+    "9EF3BFCB",
+    "C4362975",
+    "6E9A7C23"
+  ],
+  "sticks": {
+    "B087F0F1": "OFF",
+    "SERVER-192.168.200.34": "ON",
+    "EC5D3464": "OFF",
+    "C6D6BFE6": "ON",
+    "AA66D2E2": "ON",
+    "9EF3BFCB": "ON",
+    "C4362975": "ON",
+    "6E9A7C23": "ON"
+  },
+  "notes": {
+    "B087F0F1": "My-Own-PC- D-Drive",
+    "SERVER-192.168.200.34": "OffICE_SERVER",
+    "EC5D3464": "My Flash Drive",
+    "C6D6BFE6": "Aziz Sir",
+    "AA66D2E2": "Vmware",
+    "9EF3BFCB": "Haroon",
+    "C4362975": "SAAD KHAN",
+    "6E9A7C23": "DARYL"
+  },
+  "roles": {
+    "SERVER-192.168.200.34": "full"
+  },
+  "pw": {},
+  "adminpw": "ad8fa913d25b3970c6efa8ca504da8ba670ce2a9cf012d399b71924deb483d3f",
+  "linkpw": "2ba10603e933dc7381e0b3345854234669ef7b224b6509df43e286f954a1f378",
+  "log": {
+    "C6D6BFE6": "ON",
+    "SERVER-192.168.200.34": "ON",
+    "EC5D3464": "ON",
+    "B087F0F1": "ON",
+    "AA66D2E2": "OFF",
+    "9EF3BFCB": "OFF",
+    "6E9A7C23": "OFF",
+    "C4362975": "OFF"
+  },
+  "mode": {
+    "SERVER-192.168.200.34": "autopilot"
+  },
+  "netlock": "ON",
+  "netallow": [
+    "192.168.200",
+    "192.168.8"
+  ],
+  "anywhere": {
+    "EC5D3464": "ON",
+    "C6D6BFE6": "ON",
+    "MB-260777208605084": "ON",
+    "B087F0F1": "ON"
+  },
+  "master": {
+    "B087F0F1": "ON",
+    "EC5D3464": "ON"
+  },
+  "auto": {
+    "AA66D2E2": "ON",
+    "EC5D3464": "ON"
+  },
+  "run": {
+    "id": "r1794662775631668",
+    "ts": 1794662775,
+    "target": "all"
+  },
+  "locate": {
+    "id": "l1794656858157137",
+    "target": "DESKTOP-6O37LSG",
+    "label": "DESKTOP-6O37LSG",
+    "ts": 1794656858
+  }
+}
