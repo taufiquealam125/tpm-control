@@ -64,7 +64,7 @@
     "2CD3F9DA": "OFF"
   },
   "mode": {
-    "SERVER-192.168.200.34": "autopilot"
+    "SERVER-192.168.200.34": "batch"
   },
   "netlock": "ON",
   "netallow": [
