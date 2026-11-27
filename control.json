@@ -1,0 +1,128 @@
+{
+  "all": "ON",
+  "default": "DELETE",
+  "owners": [
+    "B087F0F1",
+    "SERVER-192.168.200.34",
+    "C6D6BFE6",
+    "2AC90BDC",
+    "78C8EAF7",
+    "9EF3BFCB",
+    "C4362975",
+    "A83B250C",
+    "FAADADCE",
+    "8EAE854E",
+    "60938CF0",
+    "2CD3F9DA",
+    "1ABDC490",
+    "36238C80"
+  ],
+  "sticks": {
+    "B087F0F1": "OFF",
+    "SERVER-192.168.200.34": "ON",
+    "C6D6BFE6": "OFF",
+    "AA66D2E2": "ON",
+    "9EF3BFCB": "ON",
+    "C4362975": "ON",
+    "6E9A7C23": "ON",
+    "2AC90BDC": "ON",
+    "78C8EAF7": "ON",
+    "3A8EC5D5": "ON",
+    "A83B250C": "ON",
+    "FAADADCE": "ON",
+    "2CD3F9DA": "ON",
+    "E43A6014": "ON",
+    "8EAE854E": "ON",
+    "60938CF0": "OFF",
+    "1ABDC490": "ON",
+    "081E8A3E": "ON",
+    "36238C80": "ON"
+  },
+  "notes": {
+    "B087F0F1": "My-Own-PC- D-Drive",
+    "SERVER-192.168.200.34": "OffICE_SERVER",
+    "C6D6BFE6": "Aziz Sir",
+    "AA66D2E2": "Vmware",
+    "9EF3BFCB": "Haroon Rasheed",
+    "C4362975": "SAAD KHAN",
+    "6E9A7C23": "DARYL",
+    "2AC90BDC": "Haroon Rasheed",
+    "78C8EAF7": "SAAD KHAN",
+    "3A8EC5D5": "DARYL 2",
+    "A83B250C": "My New Flash Drive",
+    "FAADADCE": "Saad Khan",
+    "2CD3F9DA": "SAAD FINAL",
+    "E43A6014": "Haroon Rasheed",
+    "8EAE854E": "My_Own_115 GB",
+    "1ABDC490": "DESKTOP-QK4533L",
+    "081E8A3E": "DESKTOP-QK4533L",
+    "36238C80": "Haroon Rasheed"
+  },
+  "roles": {
+    "SERVER-192.168.200.34": "full"
+  },
+  "pw": {},
+  "adminpw": "ad8fa913d25b3970c6efa8ca504da8ba670ce2a9cf012d399b71924deb483d3f",
+  "linkpw": "2ba10603e933dc7381e0b3345854234669ef7b224b6509df43e286f954a1f378",
+  "log": {
+    "C6D6BFE6": "ON",
+    "SERVER-192.168.200.34": "ON",
+    "B087F0F1": "ON",
+    "AA66D2E2": "ON",
+    "9EF3BFCB": "OFF",
+    "6E9A7C23": "OFF",
+    "C4362975": "OFF",
+    "2AC90BDC": "OFF",
+    "78C8EAF7": "OFF",
+    "3A8EC5D5": "OFF",
+    "FAADADCE": "OFF",
+    "2CD3F9DA": "OFF",
+    "E43A6014": "OFF",
+    "60938CF0": "OFF",
+    "1ABDC490": "OFF",
+    "081E8A3E": "OFF",
+    "36238C80": "OFF"
+  },
+  "mode": {},
+  "netlock": "ON",
+  "netallow": [
+    "192.168.200",
+    "192.168.8"
+  ],
+  "anywhere": {
+    "C6D6BFE6": "ON",
+    "MB-260777208605084": "ON",
+    "B087F0F1": "ON",
+    "AA66D2E2": "ON",
+    "A83B250C": "ON"
+  },
+  "master": {
+    "B087F0F1": "ON",
+    "C6D6BFE6": "ON",
+    "A83B250C": "ON",
+    "8EAE854E": "ON",
+    "AA66D2E2": "ON"
+  },
+  "onlinedrv": {
+    "3A8EC5D5": false,
+    "6E9A7C23": true
+  },
+  "allowupdate": {
+    "C6D6BFE6": "ON"
+  },
+  "auto": {
+    "AA66D2E2": "ON",
+    "EC5D3464": "ON"
+  },
+  "run": {
+    "id": "r1795704232268616",
+    "ts": 1795704232,
+    "target": "all"
+  },
+  "locate": {
+    "id": "l1794656858157137",
+    "target": "DESKTOP-6O37LSG",
+    "label": "DESKTOP-6O37LSG",
+    "ts": 1794656858
+  }
+}
