@@ -177,6 +177,7 @@
   body:has(#main.hide) .nav{ display:none; }
   body:has(#devCard.hide) .nav a[href="#devCard"]{ display:none; }
   body:has(#xferCard.hide) .nav a[href="#xferCard"]{ display:none; }
+  body:has(#ipCard.hide) .nav a[href="#ipCard"]{ display:none; }
   .xferItem{ margin-top:12px; padding:12px; border-radius:14px; background:var(--bg2); border:1px solid var(--line2); }
   .xferItem .xferName{ margin:0 0 8px; }
 </style>
@@ -202,6 +203,7 @@
       <a href="#allocCard">&#128100; Allocation</a>
       <a href="#devCard">&#128421;&#65039; Devices</a>
       <a href="#xferCard">&#128228; Transferred</a>
+      <a href="#ipCard">&#128737;&#65039; Security</a>
       <a href="#offCard">&#128244; Offline 3d+</a>
       <a href="#secLocate">&#128205; Locate</a>
       <a href="#secStorage">&#129529; Storage</a>
@@ -229,6 +231,13 @@
     <label>Token expiry date (optional)</label>
     <input id="tokExp" type="date" autocapitalize="off" autocorrect="off"/>
     <div class="tiny" style="margin-top:4px">Token banate waqt jo expiry date thi woh yahan daaliye - app 10 din pehle warning degi. "Never expire" ho to khaali chhodiye.</div>
+    <label>Office IP prefixes (security)</label>
+    <input id="officeIp" placeholder="jaise: 192.168.200., 192.168.1." autocapitalize="off" autocorrect="off"/>
+    <div class="tiny" style="margin-top:4px">In IP se shuru hone wali sticks "safe" maani jaayengi. Koi stick in ke <b>bahar</b> ke IP se chale to app alert degi + ek click mein revoke. Khaali = alert off.</div>
+    <div class="row" style="margin-top:12px">
+      <button class="muted" id="btnNotify" style="flex:1">&#128276; Enable phone notifications</button>
+    </div>
+    <div class="tiny" style="margin-top:4px">App khuli/active rehne par naye transfer, PC fail, aur office-bahar stick ki notification phone par aayegi.</div>
     <div class="tiny" style="margin-top:6px">If the PAT above does not have write access to tpm-devices, paste the tpm-devices token here (the same one the tool uses). This lets Devices clear/delete work from mobile.</div>
     <div class="row" style="margin-top:14px">
       <button class="green" id="btnSave">SAVE &amp; CONNECT</button>
@@ -391,6 +400,12 @@
       <div id="xferList"></div>
     </div>
 
+    <div class="card hide" id="ipCard" style="border-color:#FF5D73">
+      <div class="head"><div class="ctitle"><span class="ic">&#128737;&#65039;</span> <span id="ipTitle">Outside office network</span></div></div>
+      <details class="help"><summary>Kya hai?</summary><div class="tiny">Ye sticks aapke Office IP prefixes ke bahar ke IP se chal rahi hain (Settings mein set kiya hua). Sambhavit chori/misuse - ek click mein REVOKE kar sakte hain, ya is IP ko "safe" maan ke ALLOW kar sakte hain.</div></details>
+      <div id="ipList"></div>
+    </div>
+
     <div class="card hide" id="devCard">
       <div class="head">
         <div class="ctitle"><span class="ic">&#128421;&#65039;</span> <span id="devTitle">Devices</span></div>
@@ -442,7 +457,7 @@
   <div class="unkRow"><button class="muted" id="btnUnkLater" style="background:var(--card2);border:1px solid var(--line2)">Later</button></div></div></div>
 <script>
 const SKEY='tpm_ctrl_cfg';
-let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:'',devRepo:'',devPat:'',tokenExpiry:''};
+let cfg={owner:'',repo:'',branch:'main',path:'control.json',pat:'',devRepo:'',devPat:'',tokenExpiry:'',officeIp:'',notify:false};
 function devToken(){ return (cfg.devPat && cfg.devPat.trim()) ? cfg.devPat.trim() : cfg.pat; }
 let data={all:'ON',default:'ON',owners:[],sticks:{},notes:{},roles:{},pw:{},adminpw:'',linkpw:'',log:{},mode:{},netlock:'OFF',netallow:[],anywhere:{},master:{},onlinedrv:{},allowupdate:{}};
 let sha=null;
@@ -1046,7 +1061,7 @@ async function clearError(name){
   try{ const g=await fetch(base+'?t='+Date.now(),{headers:h}); if(g.ok){ const gj=await g.json(); await fetch(base,{method:'DELETE',headers:Object.assign({},h,{'Content-Type':'application/json'}),body:JSON.stringify({message:'clear error '+name,sha:gj.sha,branch:'main'})}); } }catch(e){}
   refreshErrors();
 }
-async function refreshErrors(){ try{ renderErrors(await loadErrors()); }catch(e){} }
+async function refreshErrors(){ try{ const _e=await loadErrors(); renderErrors(_e); try{ detectNotifyErrors(_e); }catch(e){} }catch(e){} }
 // DELETE a device: mark its stick OFF (so the tool SELF-DESTRUCTS the next time it is online, in any mode),
 // and remove it from this Devices list now. Use for a stick/PC you no longer own.
 async function deleteDevice(sid){
@@ -1085,7 +1100,7 @@ async function refreshDevices(){
   if(!cfg.devRepo){ card.classList.add('hide'); try{ $('offCard').classList.add('hide'); }catch(e){} return; }
   card.classList.remove('hide');
   $('devStatus').textContent='Loading devices…'; $('devStatus').style.color='#8FA3C8';
-  try{ const _arr=await loadDevices(); _lastDevices=_arr; renderDevices(_arr); try{ renderOffline(_arr); }catch(e){} $('devStatus').textContent='Updated '+new Date().toLocaleTimeString(); checkUnregistered(); }
+  try{ const _arr=await loadDevices(); _lastDevices=_arr; renderDevices(_arr); try{ renderOffline(_arr); }catch(e){} try{ renderIpAlert(_arr); }catch(e){} try{ detectNotify(_arr); }catch(e){} $('devStatus').textContent='Updated '+new Date().toLocaleTimeString(); checkUnregistered(); }
   catch(e){ $('devStatus').textContent=e.message; $('devStatus').style.color='#FF6B81'; }
 }
 
@@ -1096,6 +1111,7 @@ $('btnSave').onclick=async()=>{
   cfg.devRepo=$('devRepo').value.trim();
   cfg.devPat=$('devPat').value.trim();
   cfg.tokenExpiry=$('tokExp').value||'';
+  try{ cfg.officeIp=($('officeIp').value||'').trim(); }catch(e){}
   window._tokDead=false;
   if(!cfg.owner||!cfg.repo||!cfg.pat){ alert('Username, repo and token are all required.'); return; }
   save();
@@ -1103,7 +1119,11 @@ $('btnSave').onclick=async()=>{
   catch(e){ alert(e.message); }
 };
 $('btnClose').onclick=()=>{ if(cfg.owner&&cfg.repo&&cfg.pat){ showSetup(false); } };
-$('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; $('devRepo').value=cfg.devRepo||''; try{ $('tokExp').value=cfg.tokenExpiry||''; }catch(e){} $('devPat').value=cfg.devPat||''; showSetup(true); };
+$('btnGear').onclick=()=>{ $('owner').value=cfg.owner; $('repo').value=cfg.repo; $('branch').value=cfg.branch; $('path').value=cfg.path; $('pat').value=cfg.pat; $('devRepo').value=cfg.devRepo||''; try{ $('tokExp').value=cfg.tokenExpiry||''; }catch(e){} try{ $('officeIp').value=cfg.officeIp||''; }catch(e){} $('devPat').value=cfg.devPat||''; try{ updateNotifyBtn(); }catch(e){} showSetup(true); };
+if($('btnNotify')) $('btnNotify').onclick=toggleNotify;
+try{ updateNotifyBtn(); }catch(e){}
+// auto-refresh every 60s so transfers / security alerts arrive without tapping (app open/active)
+setInterval(()=>{ try{ if(cfg.owner&&cfg.repo&&cfg.pat&&cfg.devRepo) refreshDevices(); }catch(e){} }, 60000);
 $('btnRefresh').onclick=refresh;
 $('btnDevRefresh').onclick=refreshDevices;
 $('btnErrRefresh').onclick=refreshErrors;
@@ -1235,6 +1255,96 @@ async function xferSave(id,name){
   render(); await commit('save transferred stick '+id+(name?(' ('+name+')'):''));
   try{ await deleteUnknownFile(id); }catch(e){}
   checkUnregistered();
+}
+
+// ---- IP security: sticks running OUTSIDE the office network ----
+function officePrefixes(){ return String(cfg.officeIp||'').split(',').map(s=>s.trim()).filter(Boolean); }
+function ipAllowed(ip){ const ps=officePrefixes(); if(ps.length===0) return true; ip=String(ip||''); if(!ip) return true; return ps.some(p=>ip.indexOf(p)===0); }
+function renderIpAlert(arr){
+  try{
+    const card=$('ipCard'), el=$('ipList'); if(!card||!el) return;
+    if(officePrefixes().length===0){ card.classList.add('hide'); el.innerHTML=''; return; }
+    const bad=(arr||[]).filter(d=>d.ip && !ipAllowed(d.ip)).sort((x,y)=>(y.lastSeen||0)-(x.lastSeen||0));
+    if(bad.length===0){ card.classList.add('hide'); el.innerHTML=''; return; }
+    card.classList.remove('hide');
+    $('ipTitle').innerHTML='Outside office network: <span style="color:#FF5D73">'+bad.length+'</span>';
+    el.innerHTML='';
+    bad.forEach(d=>{
+      const id=String(d.stickId||'').toUpperCase();
+      const nm=(data&&data.notes&&data.notes[id])||'';
+      const div=document.createElement('div'); div.className='xferItem'; div.style.borderColor='#FF5D73';
+      div.innerHTML='<div class="tiny" style="color:#FF5D73">&#128737;&#65039; Outside office IP: <b>'+esc(d.ip)+'</b></div>'
+        +'<div class="id" style="margin-top:6px">'+esc(id)+(nm?' &nbsp;<span class="pill own">'+esc(nm)+'</span>':'')+'</div>'
+        +'<div class="tiny" style="margin-top:4px">'+esc(d.name||'PC')+(d.user?' · '+esc(d.user):'')+'</div>'
+        +'<div class="tiny">'+unkStateText(d)+(d.lastSeen?' · '+ago(d.lastSeen):'')+'</div>'
+        +'<div class="unkRow"><button class="unkDel ipRevoke">&#9940; REVOKE</button><button class="unkAdd ipAllow">&#10003; ALLOW THIS IP</button></div>';
+      div.querySelector('.ipRevoke').onclick=()=>ipRevoke(id);
+      div.querySelector('.ipAllow').onclick=()=>ipAllowAdd(d.ip);
+      el.appendChild(div);
+    });
+  }catch(e){}
+}
+async function ipRevoke(id){
+  id=String(id).toUpperCase();
+  if(!confirm('REVOKE '+id+' now?\nOn that PC the tool will stop/delete on its next internet check.')) return;
+  if(!data.sticks) data.sticks={}; data.sticks[id]='OFF';
+  render(); await commit('revoke (outside office) '+id);
+  refreshDevices();
+}
+function ipAllowAdd(ip){
+  ip=String(ip||''); if(!ip) return;
+  const m=ip.match(/^(\d+\.\d+\.\d+\.)/); const pref=m?m[1]:ip;
+  const cur=officePrefixes(); if(cur.indexOf(pref)<0){ cur.push(pref); cfg.officeIp=cur.join(', '); save(); try{ $('officeIp').value=cfg.officeIp; }catch(e){} }
+  refreshDevices();
+}
+
+// ---- Phone notifications (foreground / app-active) ----
+function notifSupported(){ return ('Notification' in window); }
+function updateNotifyBtn(){
+  const b=$('btnNotify'); if(!b) return;
+  if(!notifSupported()){ b.innerHTML='&#128276; Notifications not supported'; b.disabled=true; return; }
+  if(cfg.notify && Notification.permission==='granted'){ b.innerHTML='&#128276; Notifications ON (tap to turn off)'; b.style.background='#065F46'; }
+  else { b.innerHTML='&#128276; Enable phone notifications'; b.style.background=''; }
+}
+async function toggleNotify(){
+  if(!notifSupported()){ alert('Is browser mein notifications support nahi hai.'); return; }
+  if(cfg.notify && Notification.permission==='granted'){ cfg.notify=false; save(); updateNotifyBtn(); return; }
+  try{
+    const p=await Notification.requestPermission();
+    cfg.notify=(p==='granted'); save(); updateNotifyBtn();
+    if(cfg.notify){ showNotif('TPM', 'Notifications ON - naye transfer / PC fail / security alert yahan aayenge.'); }
+    else alert('Permission nahi mili. Browser/phone settings mein is site ke liye notifications allow kijiye.');
+  }catch(e){ alert('Notification error: '+e.message); }
+}
+async function showNotif(title, body){
+  try{
+    if(!cfg.notify || !notifSupported() || Notification.permission!=='granted') return;
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){ const reg=await navigator.serviceWorker.ready; reg.showNotification(title,{body:body,tag:'tpm-'+Date.now()}); return; }
+    new Notification(title,{body:body});
+  }catch(e){ try{ new Notification(title,{body:body}); }catch(_){} }
+}
+let _seen=null, _primed=false;
+function seenMap(){ if(_seen) return _seen; try{ _seen=JSON.parse(localStorage.getItem('tpm_notif_seen')||'{}'); }catch(e){ _seen={}; } return _seen; }
+function markOrNotify(prime,key,title,body){
+  const s=seenMap(); if(s[key]) return; s[key]=Date.now();
+  try{ localStorage.setItem('tpm_notif_seen',JSON.stringify(s)); }catch(e){}
+  if(!prime) showNotif(title,body);
+}
+function detectNotify(arr){
+  const prime=!_primed; _primed=true;
+  (arr||[]).forEach(d=>{
+    const id=String(d.stickId||'').toUpperCase(); if(!id) return;
+    if(String(d.copiedFrom||'').trim() && !isRegistered(id)){
+      markOrNotify(prime,'xfer:'+id,'📤 New stick transferred','Stick '+id+' copied from '+String(d.copiedFrom).toUpperCase());
+    }
+    if(d.ip && !ipAllowed(d.ip)){
+      markOrNotify(prime,'ip:'+id+':'+d.ip,'🛡️ Stick outside office',id+(data&&data.notes&&data.notes[id]?(' ('+data.notes[id]+')'):'')+' @ '+d.ip);
+    }
+  });
+}
+function detectNotifyErrors(list){
+  const prime=!_primed;
+  (list||[]).forEach(e=>{ const nm=String(e.name||''); if(!nm) return; markOrNotify(prime,'err:'+nm+':'+(e.lastSeen||e.when||''),'🔴 PC error',nm+(e.order?(' · Order '+e.order):'')); });
 }
 async function deleteUnknownFile(sid){
   if(!cfg.devRepo) return;
