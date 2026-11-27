@@ -36,7 +36,8 @@
     "60938CF0": "OFF",
     "1ABDC490": "ON",
     "081E8A3E": "ON",
-    "36238C80": "ON"
+    "36238C80": "ON",
+    "4A86C1DE": "ON"
   },
   "notes": {
     "B087F0F1": "My-Own-PC- D-Drive",
@@ -56,7 +57,8 @@
     "8EAE854E": "My_Own_115 GB",
     "1ABDC490": "DESKTOP-QK4533L",
     "081E8A3E": "DESKTOP-QK4533L",
-    "36238C80": "Haroon Rasheed"
+    "36238C80": "Haroon Rasheed",
+    "4A86C1DE": "Haroon Rasheed"
   },
   "roles": {
     "SERVER-192.168.200.34": "full"
